@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎰 Friend's Gambling Hub</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap)" rel="stylesheet">
+</head>
+<body>
+    <!-- Login/Register Screen -->
+    <div id="authScreen" class="screen active">
+        <div class="container auth-container">
+            <h1>🎰 Friend's Gambling Hub</h1>
+            <p class="subtitle">No money, just fun with friends!</p>
+            
+            <div class="auth-tabs">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="register">Register</button>
+            </div>
+            
+            <form id="loginForm" class="auth-form active">
+                <input type="text" id="loginUsername" placeholder="Username" required>
+                <input type="password" id="loginPassword" placeholder="Password" required>
+                <button type="submit" class="btn primary">Login</button>
+            </form>
+            
+            <form id="registerForm" class="auth-form">
+                <input type="text" id="regUsername" placeholder="Choose Username" required>
+                <input type="password" id="regPassword" placeholder="Choose Password" required>
+                <button type="submit" class="btn primary">Create Account</button>
+            </form>
+            
+            <p id="authError" class="error"></p>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <header>
+            <div class="header-left">
+                <h2>🎰 Gambling Hub</h2>
+            </div>
+            <div class="header-right">
+                <span id="playerName">Player</span>
+                <span class="points-badge">💰 <span id="playerPoints">100</span> pts</span>
+                <button id="logoutBtn" class="btn small">Logout</button>
+            </div>
+        </header>
+
+        <main class="game-container">
+            <div class="wheel-section">
+                <h3>🎡 Spin the Wheel (1-9)</h3>
+                <div class="wheel-wrapper">
+                    <canvas id="spinWheel" width="400" height="400"></canvas>
+                    <div class="wheel-pointer">▼</div>
+                </div>
+                <div id="spinResult" class="result-display"></div>
+            </div>
+
+            <div class="betting-section">
+                <h3>Place Your Bet</h3>
+                
+                <div class="bet-input-group">
+                    <label>Choose Number (1-9):</label>
+                    <div class="number-buttons">
+                        <button class="num-btn" data-num="1">1</button>
+                        <button class="num-btn" data-num="2">2</button>
+                        <button class="num-btn" data-num="3">3</button>
+                        <button class="num-btn" data-num="4">4</button>
+                        <button class="num-btn" data-num="5">5</button>
+                        <button class="num-btn" data-num="6">6</button>
+                        <button class="num-btn" data-num="7">7</button>
+                        <button class="num-btn" data-num="8">8</button>
+                        <button class="num-btn" data-num="9">9</button>
+                    </div>
+                </div>
+
+                <div class="bet-input-group">
+                    <label>Bet Amount:</label>
+                    <input type="number" id="betAmount" min="1" value="10" placeholder="Enter bet">
+                </div>
+
+                <div class="bet-summary">
+                    <p>Selected: <strong id="selectedNum">None</strong></p>
+                    <p>Bet: <strong id="betDisplay">0</strong> pts</p>
+                    <p>Win Multiplier: <strong>9x</strong> (1 in 9 chance)</p>
+                </div>
+
+                <button id="spinBtn" class="btn primary large" disabled>🎲 SPIN!</button>
+            </div>
+        </main>
+
+        <!-- Admin Panel (Only visible to admin) -->
+        <div id="adminPanel" class="admin-panel hidden">
+            <h3>🔧 Admin Control Panel</h3>
+            
+            <div class="admin-section">
+                <h4>Manage Players</h4>
+                <div id="playerList" class="player-list"></div>
+            </div>
+
+            <div class="admin-section">
+                <h4>Adjust Points</h4>
+                <select id="adminSelectPlayer"></select>
+                <input type="number" id="adminPointsInput" placeholder="Points to add/remove">
+                <button id="adminAddPoints" class="btn">Add Points</button>
+                <button id="adminRemovePoints" class="btn danger">Remove Points</button>
+                <button id="adminSetPoints" class="btn">Set Exact</button>
+            </div>
+
+            <div class="admin-section">
+                <h4>Rig Next Spin</h4>
+                <p class="warning">⚠️ Force the next spin result</p>
+                <select id="rigNumber">
+                    <option value="0">No Rig (Random)</option>
+                    <option value="1">Force: 1</option>
+                    <option value="2">Force: 2</option>
+                    <option value="3">Force: 3</option>
+                    <option value="4">Force: 4</option>
+                    <option value="5">Force: 5</option>
+                    <option value="6">Force: 6</option>
+                    <option value="7">Force: 7</option>
+                    <option value="8">Force: 8</option>
+                    <option value="9">Force: 9</option>
+                </select>
+                <p id="rigStatus">Status: Random Mode</p>
+            </div>
+
+            <div class="admin-section">
+                <h4>Game History</h4>
+                <div id="gameHistory" class="history-list"></div>
+                <button id="clearHistory" class="btn small">Clear History</button>
+            </div>
+        </div>
+
+        <button id="toggleAdmin" class="admin-toggle hidden">⚙️ Admin</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
