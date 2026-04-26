@@ -2,155 +2,122 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>Friend's Gambling Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎰 Friend's Gambling Hub</title>
+
+    <!-- Your CSS -->
     <link rel="stylesheet" href="styles.css">
-    <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap)" rel="stylesheet">
 </head>
 <body>
-    <!-- Login/Register Screen -->
-    <div id="authScreen" class="screen active">
-        <div class="container auth-container">
-            <h1>🎰 Friend's Gambling Hub</h1>
-            <p class="subtitle">No money, just fun with friends!</p>
-            
-            <div class="auth-tabs">
-                <button class="tab-btn active" data-tab="login">Login</button>
-                <button class="tab-btn" data-tab="register">Register</button>
-            </div>
-            
-            <form id="loginForm" class="auth-form active">
-                <input type="text" id="loginUsername" placeholder="Username" required>
-                <input type="password" id="loginPassword" placeholder="Password" required>
-                <button type="submit" class="btn primary">Login</button>
-            </form>
-            
-            <form id="registerForm" class="auth-form">
-                <input type="text" id="regUsername" placeholder="Choose Username" required>
-                <input type="password" id="regPassword" placeholder="Choose Password" required>
-                <button type="submit" class="btn primary">Create Account</button>
-            </form>
-            
-            <p id="authError" class="error"></p>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div id="authScreen" class="active">
+    <h1>🎰 Friend's Gambling Hub</h1>
+
+    <div>
+        <button class="tab-btn active" data-tab="login">Login</button>
+        <button class="tab-btn" data-tab="register">Register</button>
+    </div>
+
+    <!-- Login -->
+    <form id="loginForm" class="active">
+        <input id="loginUsername" placeholder="Username" required>
+        <input id="loginPassword" type="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <!-- Register -->
+    <form id="registerForm">
+        <input id="regUsername" placeholder="Username" required>
+        <input id="regPassword" type="password" placeholder="Password" required>
+        <button type="submit">Register</button>
+    </form>
+
+    <p id="authError" style="color:red;"></p>
+</div>
+
+<!-- ================= GAME SCREEN ================= -->
+<div id="gameScreen">
+
+    <h2>Welcome <span id="playerName"></span></h2>
+    <p>Points: <span id="playerPoints"></span></p>
+
+    <canvas id="spinWheel" width="300" height="300"></canvas>
+
+    <div>
+        <p>Select Number:</p>
+        <div>
+            <button class="num-btn" data-num="1">1</button>
+            <button class="num-btn" data-num="2">2</button>
+            <button class="num-btn" data-num="3">3</button>
+            <button class="num-btn" data-num="4">4</button>
+            <button class="num-btn" data-num="5">5</button>
+            <button class="num-btn" data-num="6">6</button>
+            <button class="num-btn" data-num="7">7</button>
+            <button class="num-btn" data-num="8">8</button>
+            <button class="num-btn" data-num="9">9</button>
         </div>
     </div>
 
-    <!-- Game Screen -->
-    <div id="gameScreen" class="screen">
-        <header>
-            <div class="header-left">
-                <h2>🎰 Gambling Hub</h2>
-            </div>
-            <div class="header-right">
-                <span id="playerName">Player</span>
-                <span class="points-badge">💰 <span id="playerPoints">100</span> pts</span>
-                <button id="logoutBtn" class="btn small">Logout</button>
-            </div>
-        </header>
+    <input id="betAmount" type="number" placeholder="Enter bet">
+    <button id="spinBtn">Spin</button>
 
-        <main class="game-container">
-            <div class="wheel-section">
-                <h3>🎡 Spin the Wheel (1-9)</h3>
-                <div class="wheel-wrapper">
-                    <canvas id="spinWheel" width="400" height="400"></canvas>
-                    <div class="wheel-pointer">▼</div>
-                </div>
-                <div id="spinResult" class="result-display"></div>
-            </div>
+    <h3 id="spinResult"></h3>
 
-            <div class="betting-section">
-                <h3>Place Your Bet</h3>
-                
-                <div class="bet-input-group">
-                    <label>Choose Number (1-9):</label>
-                    <div class="number-buttons">
-                        <button class="num-btn" data-num="1">1</button>
-                        <button class="num-btn" data-num="2">2</button>
-                        <button class="num-btn" data-num="3">3</button>
-                        <button class="num-btn" data-num="4">4</button>
-                        <button class="num-btn" data-num="5">5</button>
-                        <button class="num-btn" data-num="6">6</button>
-                        <button class="num-btn" data-num="7">7</button>
-                        <button class="num-btn" data-num="8">8</button>
-                        <button class="num-btn" data-num="9">9</button>
-                    </div>
-                </div>
+    <button id="logoutBtn">Logout</button>
 
-                <div class="bet-input-group">
-                    <label>Bet Amount:</label>
-                    <input type="number" id="betAmount" min="1" value="10" placeholder="Enter bet">
-                </div>
+    <!-- ADMIN PANEL -->
+    <button id="toggleAdmin" class="hidden">Admin Panel</button>
 
-                <div class="bet-summary">
-                    <p>Selected: <strong id="selectedNum">None</strong></p>
-                    <p>Bet: <strong id="betDisplay">0</strong> pts</p>
-                    <p>Win Multiplier: <strong>9x</strong> (1 in 9 chance)</p>
-                </div>
+    <div id="adminPanel">
+        <h3>Admin Controls</h3>
 
-                <button id="spinBtn" class="btn primary large" disabled>🎲 SPIN!</button>
-            </div>
-        </main>
+        <select id="adminSelectPlayer"></select>
+        <input id="adminPointsInput" type="number" placeholder="Points">
 
-        <!-- Admin Panel (Only visible to admin) -->
-        <div id="adminPanel" class="admin-panel hidden">
-            <h3>🔧 Admin Control Panel</h3>
-            
-            <div class="admin-section">
-                <h4>Manage Players</h4>
-                <div id="playerList" class="player-list"></div>
-            </div>
+        <button id="adminAddPoints">Add</button>
+        <button id="adminRemovePoints">Remove</button>
+        <button id="adminSetPoints">Set</button>
 
-            <div class="admin-section">
-                <h4>Adjust Points</h4>
-                <select id="adminSelectPlayer"></select>
-                <input type="number" id="adminPointsInput" placeholder="Points to add/remove">
-                <button id="adminAddPoints" class="btn">Add Points</button>
-                <button id="adminRemovePoints" class="btn danger">Remove Points</button>
-                <button id="adminSetPoints" class="btn">Set Exact</button>
-            </div>
+        <hr>
 
-            <div class="admin-section">
-                <h4>Rig Next Spin</h4>
-                <p class="warning">⚠️ Force the next spin result</p>
-                <select id="rigNumber">
-                    <option value="0">No Rig (Random)</option>
-                    <option value="1">Force: 1</option>
-                    <option value="2">Force: 2</option>
-                    <option value="3">Force: 3</option>
-                    <option value="4">Force: 4</option>
-                    <option value="5">Force: 5</option>
-                    <option value="6">Force: 6</option>
-                    <option value="7">Force: 7</option>
-                    <option value="8">Force: 8</option>
-                    <option value="9">Force: 9</option>
-                </select>
-                <p id="rigStatus">Status: Random Mode</p>
-            </div>
+        <p>Rig Spin Result:</p>
+        <input id="rigNumber" type="number" min="0" max="9" value="0">
+        <p id="rigStatus">Random Mode</p>
 
-            <div class="admin-section">
-                <h4>Game History</h4>
-                <div id="gameHistory" class="history-list"></div>
-                <button id="clearHistory" class="btn small">Clear History</button>
-            </div>
-        </div>
+        <hr>
 
-        <button id="toggleAdmin" class="admin-toggle hidden">⚙️ Admin</button>
+        <button id="clearHistory">Clear History</button>
+
+        <div id="playerList"></div>
+        <div id="gameHistory"></div>
     </div>
+</div>
+
+<!-- ================= FIREBASE (IMPORTANT) ================= -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyBgCX09RWBq47Y6bWCIB5IAUj5Ws-I1m-I",
+  authDomain: "betbazzzi-aba25.firebaseapp.com",
+  projectId: "betbazzzi-aba25",
+  storageBucket: "betbazzzi-aba25.firebasestorage.app",
+  messagingSenderId: "644113043164",
+  appId: "1:644113043164:web:5d6d2d0f3fb34cdde16e19",
+  measurementId: "G-6VNTCJEMP9"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  window.db = db;
+// make it global for script.js
+window.db = db;
 </script>
-    <script src="script.js"></script>
+
+<!-- ================= YOUR JS ================= -->
+<script src="script.js"></script>
+
 </body>
 </html>
