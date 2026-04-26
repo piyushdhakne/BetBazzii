@@ -13,9 +13,13 @@ const DEFAULT_POINTS = 100;
 // DATA STORAGE (localStorage based)
 // ============================================
 
-function getUsers() {
-    const data = localStorage.getItem('gamblingHub_users');
-    return data ? JSON.parse(data) : {};
+async function getUsers() {
+    const snapshot = await window.db.collection("users").get();
+    const users = {};
+    snapshot.forEach(doc => {
+        users[doc.id] = doc.data();
+    });
+    return users;
 }
 
 function saveUsers(users) {
