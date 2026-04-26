@@ -22,23 +22,39 @@ async function updatePoints(username, points) {
 }
 
 // ============================================
-// REAL-TIME (MULTIPLAYER)
+// CURRENT USER
+// ============================================
+
+function getCurrentUser() {
+    return localStorage.getItem("currentUser");
+}
+
+function setCurrentUser(username) {
+    localStorage.setItem("currentUser", username);
+}
+
+// ============================================
+// REALTIME PLAYER
 // ============================================
 
 function listenToUser(username) {
     window.db.collection("users").doc(username)
-    .onSnapshot((doc) => {
+    .onSnapshot(doc => {
         if (!doc.exists) return;
 
         const user = doc.data();
-        document.getElementById("playerPoints").textContent = user.points;
-        document.getElementById("playerName").textContent = username;
+        playerName.textContent = username;
+        playerPoints.textContent = user.points;
     });
 }
 
+// ============================================
+// REALTIME ADMIN PANEL
+// ============================================
+
 function listenAllUsers() {
     window.db.collection("users")
-    .onSnapshot((snapshot) => {
+    .onSnapshot(snapshot => {
 
         playerList.innerHTML = "";
         adminSelectPlayer.innerHTML = "";
@@ -60,26 +76,55 @@ function listenAllUsers() {
 }
 
 // ============================================
-// CURRENT USER
+// FORCE RESULT SYSTEM (ADMIN CHEAT CONTROL)
 // ============================================
 
-function getCurrentUser() {
-    return localStorage.getItem("currentUser");
+let forcedResult = 0;
+
+forceResult.onchange = (e) => {
+    forcedResult = parseInt(e.target.value);
+
+    if (forcedResult === 0) {
+        forceStatus.textContent = "Mode: Random";
+    } else {
+        forceStatus.textContent = "Mode: Forced " + forcedResult;
+    }
+};
+
+// ============================================
+// SHARED SPIN SYSTEM
+// ============================================
+
+async function spinGame(result, forced) {
+    await window.db.collection("game").doc("current").set({
+        result: result,
+        forced: forced,
+        time: Date.now()
+    });
 }
 
-function setCurrentUser(username) {
-    localStorage.setItem("currentUser", username);
-}
+function listenGame() {
+    window.db.collection("game").doc("current")
+    .onSnapshot(doc => {
+        if (!doc.exists) return;
 
-function clearCurrentUser() {
-    localStorage.removeItem("currentUser");
+        const data = doc.data();
+
+        let text = "Result: " + data.result;
+
+        if (data.forced) {
+            text += " (Admin Override)";
+        }
+
+        spinResult.textContent = text;
+    });
 }
 
 // ============================================
 // AUTH
 // ============================================
 
-loginForm.addEventListener("submit", async (e) => {
+loginForm.onsubmit = async (e) => {
     e.preventDefault();
 
     const username = loginUsername.value.trim().toLowerCase();
@@ -92,11 +137,11 @@ loginForm.addEventListener("submit", async (e) => {
         showGameScreen();
         listenToUser(username);
     } else {
-        authError.textContent = "Invalid username or password!";
+        authError.textContent = "Invalid login";
     }
-});
+};
 
-registerForm.addEventListener("submit", async (e) => {
+registerForm.onsubmit = async (e) => {
     e.preventDefault();
 
     const username = regUsername.value.trim().toLowerCase();
@@ -105,7 +150,7 @@ registerForm.addEventListener("submit", async (e) => {
     const users = await getUsers();
 
     if (users[username]) {
-        authError.textContent = "Username already exists!";
+        authError.textContent = "User exists";
         return;
     }
 
@@ -118,7 +163,7 @@ registerForm.addEventListener("submit", async (e) => {
     setCurrentUser(username);
     showGameScreen();
     listenToUser(username);
-});
+};
 
 // ============================================
 // SCREEN CONTROL
@@ -128,14 +173,16 @@ function showGameScreen() {
     authScreen.classList.remove("active");
     gameScreen.classList.add("active");
 
-    const currentUser = getCurrentUser();
+    const user = getCurrentUser();
 
-    if (currentUser === "admin") {
+    if (user === "admin") {
         toggleAdmin.classList.remove("hidden");
-        listenAllUsers(); // 🔥 ADMIN LIVE PANEL
+        listenAllUsers();
     } else {
         toggleAdmin.classList.add("hidden");
     }
+
+    listenGame();
 }
 
 function showAuthScreen() {
@@ -144,57 +191,37 @@ function showAuthScreen() {
 }
 
 // ============================================
-// LOGOUT
+// SPIN BUTTON (ADMIN ONLY)
 // ============================================
 
-logoutBtn.addEventListener("click", () => {
-    clearCurrentUser();
-    location.reload();
-});
+spinBtn.onclick = async () => {
 
-// ============================================
-// BETTING SYSTEM
-// ============================================
+    const user = getCurrentUser();
 
-let selectedNumber = null;
-
-numBtns.forEach(btn => {
-    btn.addEventListener("click", () => {
-        selectedNumber = parseInt(btn.dataset.num);
-        selectedNum.textContent = selectedNumber;
-    });
-});
-
-spinBtn.addEventListener("click", async () => {
-
-    const username = getCurrentUser();
-    const users = await getUsers();
-    const user = users[username];
-
-    const bet = parseInt(betAmount.value);
-
-    if (!selectedNumber || bet <= 0) return;
-
-    if (bet > user.points) {
-        spinResult.textContent = "Not enough points!";
+    if (user !== "admin") {
+        alert("Only admin can spin");
         return;
     }
 
-    const result = Math.floor(Math.random() * 9) + 1;
+    let result;
 
-    if (result === selectedNumber) {
-        user.points += bet * 8;
-        spinResult.textContent = `WIN! (${result})`;
+    if (forcedResult !== 0) {
+        result = forcedResult;
     } else {
-        user.points -= bet;
-        spinResult.textContent = `LOSE! (${result})`;
+        result = Math.floor(Math.random() * 9) + 1;
     }
 
-    await updatePoints(username, user.points);
-});
+    const isForced = forcedResult !== 0;
+
+    forcedResult = 0;
+    forceResult.value = "0";
+    forceStatus.textContent = "Mode: Random";
+
+    await spinGame(result, isForced);
+};
 
 // ============================================
-// ADMIN CONTROLS
+// ADMIN POINT CONTROL
 // ============================================
 
 async function modifyPoints(action) {
@@ -213,7 +240,6 @@ async function modifyPoints(action) {
     await updatePoints(username, user.points);
 }
 
-// Buttons
 adminAddPoints.onclick = () => modifyPoints("add");
 adminRemovePoints.onclick = () => modifyPoints("remove");
 adminSetPoints.onclick = () => modifyPoints("set");
