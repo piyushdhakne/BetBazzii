@@ -87,15 +87,18 @@ function listenAllUsers() {
 
 let forcedResult = 0;
 
-if ($("forceResult")) {
-    $("forceResult").onchange = (e) => {
-        forcedResult = parseInt(e.target.value);
+const forceInput = document.getElementById("forceResult");
+const forceStatus = document.getElementById("forceStatus");
 
-        if ($("forceStatus")) {
-            $("forceStatus").textContent =
-                forcedResult === 0 ? "Mode: Random" : "Mode: Forced " + forcedResult;
+if (forceInput) {
+    forceInput.addEventListener("change", (e) => {
+        forcedResult = parseInt(e.target.value) || 0;
+
+        if (forceStatus) {
+            forceStatus.textContent =
+                forcedResult === 0 ? "Mode: Random" : "Mode: Forced: " + forcedResult;
         }
-    };
+    });
 }
 
 // ============================================
