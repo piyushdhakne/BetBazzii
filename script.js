@@ -1,5 +1,5 @@
 // ============================================
-// FIREBASE FUNCTIONS
+// FIREBASE HELPERS
 // ============================================
 
 async function getUsers() {
@@ -22,27 +22,64 @@ async function updatePoints(username, points) {
 }
 
 // ============================================
-// REAL-TIME LISTENER (MULTIPLAYER 🔥)
+// REAL-TIME (MULTIPLAYER)
 // ============================================
 
 function listenToUser(username) {
-    const ref = window.db.collection("users").doc(username);
-
-    ref.onSnapshot((doc) => {
+    window.db.collection("users").doc(username)
+    .onSnapshot((doc) => {
         if (!doc.exists) return;
 
         const user = doc.data();
-
         document.getElementById("playerPoints").textContent = user.points;
         document.getElementById("playerName").textContent = username;
     });
+}
+
+function listenAllUsers() {
+    window.db.collection("users")
+    .onSnapshot((snapshot) => {
+
+        playerList.innerHTML = "";
+        adminSelectPlayer.innerHTML = "";
+
+        snapshot.forEach(doc => {
+            const user = doc.data();
+            const username = doc.id;
+
+            const div = document.createElement("div");
+            div.innerHTML = `${username} - ${user.points}`;
+            playerList.appendChild(div);
+
+            const option = document.createElement("option");
+            option.value = username;
+            option.textContent = username;
+            adminSelectPlayer.appendChild(option);
+        });
+    });
+}
+
+// ============================================
+// CURRENT USER
+// ============================================
+
+function getCurrentUser() {
+    return localStorage.getItem("currentUser");
+}
+
+function setCurrentUser(username) {
+    localStorage.setItem("currentUser", username);
+}
+
+function clearCurrentUser() {
+    localStorage.removeItem("currentUser");
 }
 
 // ============================================
 // AUTH
 // ============================================
 
-loginForm.addEventListener('submit', async (e) => {
+loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const username = loginUsername.value.trim().toLowerCase();
@@ -53,13 +90,13 @@ loginForm.addEventListener('submit', async (e) => {
     if (users[username] && users[username].password === password) {
         setCurrentUser(username);
         showGameScreen();
-        listenToUser(username); // 🔥 LIVE START
+        listenToUser(username);
     } else {
-        authError.textContent = 'Invalid username or password!';
+        authError.textContent = "Invalid username or password!";
     }
 });
 
-registerForm.addEventListener('submit', async (e) => {
+registerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const username = regUsername.value.trim().toLowerCase();
@@ -68,13 +105,13 @@ registerForm.addEventListener('submit', async (e) => {
     const users = await getUsers();
 
     if (users[username]) {
-        authError.textContent = 'Username already exists!';
+        authError.textContent = "Username already exists!";
         return;
     }
 
     await saveUser(username, {
-        username: username,
-        password: password,
+        username,
+        password,
         points: 100
     });
 
@@ -84,26 +121,33 @@ registerForm.addEventListener('submit', async (e) => {
 });
 
 // ============================================
-// CURRENT USER STORAGE
+// SCREEN CONTROL
 // ============================================
 
-function getCurrentUser() {
-    return localStorage.getItem('currentUser');
+function showGameScreen() {
+    authScreen.classList.remove("active");
+    gameScreen.classList.add("active");
+
+    const currentUser = getCurrentUser();
+
+    if (currentUser === "admin") {
+        toggleAdmin.classList.remove("hidden");
+        listenAllUsers(); // 🔥 ADMIN LIVE PANEL
+    } else {
+        toggleAdmin.classList.add("hidden");
+    }
 }
 
-function setCurrentUser(username) {
-    localStorage.setItem('currentUser', username);
-}
-
-function clearCurrentUser() {
-    localStorage.removeItem('currentUser');
+function showAuthScreen() {
+    authScreen.classList.add("active");
+    gameScreen.classList.remove("active");
 }
 
 // ============================================
 // LOGOUT
 // ============================================
 
-logoutBtn.addEventListener('click', () => {
+logoutBtn.addEventListener("click", () => {
     clearCurrentUser();
     location.reload();
 });
@@ -115,63 +159,43 @@ logoutBtn.addEventListener('click', () => {
 let selectedNumber = null;
 
 numBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener("click", () => {
         selectedNumber = parseInt(btn.dataset.num);
         selectedNum.textContent = selectedNumber;
     });
 });
 
-spinBtn.addEventListener('click', async () => {
+spinBtn.addEventListener("click", async () => {
 
     const username = getCurrentUser();
     const users = await getUsers();
     const user = users[username];
 
-    const betAmount = parseInt(betAmount.value);
+    const bet = parseInt(betAmount.value);
 
-    if (!selectedNumber || betAmount <= 0) return;
+    if (!selectedNumber || bet <= 0) return;
 
-    if (betAmount > user.points) {
-        spinResult.textContent = "Not enough points";
+    if (bet > user.points) {
+        spinResult.textContent = "Not enough points!";
         return;
     }
 
-    const winningNumber = Math.floor(Math.random() * 9) + 1;
+    const result = Math.floor(Math.random() * 9) + 1;
 
-    if (selectedNumber === winningNumber) {
-        user.points += betAmount * 8;
-        spinResult.textContent = `WIN! Number ${winningNumber}`;
+    if (result === selectedNumber) {
+        user.points += bet * 8;
+        spinResult.textContent = `WIN! (${result})`;
     } else {
-        user.points -= betAmount;
-        spinResult.textContent = `LOSE! Number ${winningNumber}`;
+        user.points -= bet;
+        spinResult.textContent = `LOSE! (${result})`;
     }
 
     await updatePoints(username, user.points);
 });
 
 // ============================================
-// ADMIN PANEL
+// ADMIN CONTROLS
 // ============================================
-
-async function updateAdminPanel() {
-    const users = await getUsers();
-
-    playerList.innerHTML = "";
-    adminSelectPlayer.innerHTML = "";
-
-    Object.keys(users).forEach(username => {
-        const user = users[username];
-
-        const div = document.createElement("div");
-        div.innerHTML = `${username} - ${user.points}`;
-        playerList.appendChild(div);
-
-        const option = document.createElement("option");
-        option.value = username;
-        option.textContent = username;
-        adminSelectPlayer.appendChild(option);
-    });
-}
 
 async function modifyPoints(action) {
     const username = adminSelectPlayer.value;
@@ -187,11 +211,9 @@ async function modifyPoints(action) {
     if (action === "set") user.points = amount;
 
     await updatePoints(username, user.points);
-
-    updateAdminPanel();
 }
 
-// buttons
+// Buttons
 adminAddPoints.onclick = () => modifyPoints("add");
 adminRemovePoints.onclick = () => modifyPoints("remove");
 adminSetPoints.onclick = () => modifyPoints("set");
@@ -205,7 +227,7 @@ function init() {
 
     if (user) {
         showGameScreen();
-        listenToUser(user); // 🔥 important
+        listenToUser(user);
     } else {
         showAuthScreen();
     }
